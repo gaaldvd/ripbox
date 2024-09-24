@@ -4,6 +4,7 @@ from urllib.request import urlopen
 from urllib.parse import quote
 from json import loads
 from bs4 import BeautifulSoup
+# from subprocess import run
 
 
 class Request:
@@ -41,6 +42,7 @@ class Request:
                 result = {'id': r['videoId'],
                           'title': r['title']['runs'][0]['text'],
                           'length': r['lengthText']['simpleText'],
+                          'channel': r['ownerText']['runs'][0]['text'],
                           'type': "video"}
                 results.append(result)
             elif 'radioRenderer' in r:
