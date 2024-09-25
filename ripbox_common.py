@@ -44,6 +44,10 @@ class Request:
                           'length': r['lengthText']['simpleText'],
                           'channel': r['ownerText']['runs'][0]['text'],
                           'type': "video"}
+                if 'publishedTimeText' in r:
+                    result['uploaded'] = r['publishedTimeText']['simpleText']
+                else:
+                    result['uploaded'] = None
                 results.append(result)
             elif 'radioRenderer' in r:
                 r = r['radioRenderer']

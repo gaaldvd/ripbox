@@ -6,8 +6,9 @@ from ripbox_common import Request
 
 
 HELP_MSG = (Style.BRIGHT + "Valid commands:\n" + Style.RESET_ALL
-            + "  q<n>: add n. result to queue\n"
-            "  d<n>: download n. result\n"
+            + "  q<n>: add n. entry to queue\n"
+            "  d<n>: download n. entry\n"
+            "  i<n>: entry info\n"
             "  lq: list queue\n"
             "  dq: download queue\n"
             "  lr: list results\n"
@@ -22,12 +23,10 @@ def list_results(results):
     for result, n in zip(results, range(len(results))):
         # rtype = result['type']
         title = result['title']
-        channel = result['channel'] if 'channel' in result else None
         length = result['length'] if 'length' in result else None
         # print(Style.NORMAL if rtype == 'video' else Style.BRIGHT, end="")
         print(f"{n + 1:<2}", end="")
         print(f" {title[:95] + '...' if len(title) > 95 else title}  "
-              + (f"- ({channel}) -  " if channel else "")
               + (f"[{length}]" if length else ""))
 
 
@@ -38,15 +37,16 @@ def main():
 
         # Enter search query
         if not request:
-            # query = "no woman no cry"
-            query = input(Style.BRIGHT + "\nSearch: " + Style.RESET_ALL)
+            query = "no woman no cry"
+            # query = input(Style.BRIGHT + "\nSearch: " + Style.RESET_ALL)
             request = Request(query)
             list_results(request.results)
 
+        # Enter command
         cmd = input("\n> ")
 
-        # Parse q/d command
-        if cmd[0] in ("q", "d") and len(cmd) > 1:
+        # Parse q/d/i command
+        if cmd[0] in ("q", "d", "i") and len(cmd) > 1:
             c, n = cmd[0], cmd[1:]
         else:
             c, n = None, None
@@ -70,14 +70,14 @@ def main():
         elif cmd == "ns":
             # New search query
             request = None
-        elif c in ("q", "d") and n.isnumeric():
-            # Add entry to queue / download entry
+        elif c in ("q", "d", "i") and n.isnumeric():
+            # Add to queue / download / info
             n = int(n)
             if n < 1 or n > len(request.results):
                 print(Style.BRIGHT + f"\nInvalid entry: {n}" + Style.RESET_ALL
                       + f"  Choose from 1-{len(request.results)}!")
             else:
-                print(f"{c} {n}")  # TODO add to queue/download
+                print(f"{c} {n}")  # TODO add to queue/download/info
         else:
             print(Style.BRIGHT + "\nUnknown command! " + Style.RESET_ALL
                   + HELP_MSG)
