@@ -63,4 +63,14 @@ class Queue:
     """Manages a download queue."""
 
     def __init__(self):
-        pass
+        self.entries = []
+
+    def remove(self):
+        """Remove active queue."""
+
+        self.entries = []
+
+    def remove_entry(self, entry_id):
+        """Remove an entry from the queue."""
+
+        self.entries = [e for e in self.entries if e['id'] != entry_id]
