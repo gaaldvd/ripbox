@@ -2,8 +2,8 @@
 
 ## general
 
-- exceptions
-- mark if entry is in queue / downloaded
+- download function
+- progress bar for queue download
 
 ## requirements
 

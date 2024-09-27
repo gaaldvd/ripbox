@@ -8,8 +8,17 @@ from bs4 import BeautifulSoup
 # from subprocess import run
 
 
-class Request:
-    """Manages search requests."""
+def download(entry_id):
+    """Download an entry from query results or queue."""
+    try:
+        pass  # TODO download entry
+        # run(["yt-dlp", "-x", "--audio-format", "flac", entry_id], check=False)
+    except (URLError, HTTPError) as cerr:
+        raise ConnectionError("Connection error!") from cerr
+
+
+class RipboxRequest:
+    """Manages search requests and downloads."""
 
     def __init__(self, query):
         self.query = query
@@ -64,19 +73,8 @@ class Request:
 
         return results
 
-    def download_entry(self, entry_id):
-        try:
-            pass  # TODO download entry
-            # run(["yt-dlp", "-x", "--audio-format", "flac", entry_id], check=False)
-        except (URLError, HTTPError) as cerr:
-            raise ConnectionError("Connection error!") from cerr
-        else:
-            for r in self.results:
-                if r['id'] == entry_id:
-                    r['downloaded'] = True
 
-
-class Queue:
+class RipboxQueue:
     """Manages a download queue."""
 
     def __init__(self):
@@ -91,6 +89,3 @@ class Queue:
         """Remove an entry from the queue."""
 
         self.entries = [e for e in self.entries if e['id'] != entry_id]
-
-    def download(self):
-        pass  # TODO download queue

@@ -2,7 +2,7 @@
 
 from sys import exit as close
 from colorama import Style
-from ripbox_common import Request, Queue
+from ripbox_common import RipboxRequest, RipboxQueue, download
 
 
 HELP_MSG = (Style.BRIGHT + "Valid commands:\n" + Style.RESET_ALL
@@ -24,11 +24,8 @@ COMMANDS = ("help", "exit", "dq", "lq", "rq", "lr", "ns", "d", "q", "i", "r")
 def list_entries(entries):
     """List query results or queue."""
     for result, n in zip(entries, range(len(entries))):
-        # TODO check if marked as downloaded/in queue
-        # rtype = result['type']
         title = result['title']
         length = result['length'] if 'length' in result else None
-        # print(Style.NORMAL if rtype == 'video' else Style.BRIGHT, end="")
         print(f"{n + 1:<2}", end="")
         print(f" {title[:95] + '...' if len(title) > 95 else title}  "
               + (f"[{length}]" if length else ""))
@@ -37,20 +34,23 @@ def list_entries(entries):
 def main():
     """CLI application for Ripbox."""
     request = None
-    queue = Queue()
+    queue = RipboxQueue()
+
+    print(Style.BRIGHT + "\nWelcome to Ripbox!" + Style.RESET_ALL)
 
     while True:
 
         # Enter search query
         if not request:
-            query = "no woman no cry"
-            # query = input(Style.BRIGHT + "\nSearch: " + Style.RESET_ALL)
             try:
-                request = Request(query)
+                query = "no woman no cry"
+                # query = input(Style.BRIGHT + "\nSearch: " + Style.RESET_ALL)
+                request = RipboxRequest(query)
             except ConnectionError as cerr:
                 close(cerr)
-            print(Style.BRIGHT + "\nResults:\n" + Style.RESET_ALL)
-            list_entries(request.results)
+            else:
+                print(Style.BRIGHT + "\nResults:\n" + Style.RESET_ALL)
+                list_entries(request.results)
 
         # Enter command
         cmd = input("\n> ")
@@ -73,7 +73,9 @@ def main():
             elif cmd == "dq":
                 # Download entries in the queue
                 print("\nDownload queue...")
-                queue.download()
+                for entry in queue.entries:
+                    print(f"Downloading {entry['title']}...")
+                    download(entry['id'])
                 print("Done.")
             elif cmd == "lq":
                 # List queue
@@ -99,19 +101,11 @@ def main():
                 entry = request.results[n - 1]
                 if c == "q":
                     queue.entries.append(entry)
-                    # Mark as queued in results
-                    for r in request.results:
-                        if r['id'] == entry['id']:
-                            r['queued'] = True
                     print(f"\n{entry['title']} added to queue.")
                 elif c == "d":
                     try:
                         print(f"\nDownloading {entry['title']}...")
-                        request.download_entry(entry['id'])
-                        # Mark as downloaded in queue
-                        for e in queue.entries:
-                            if e['id'] == entry['id']:
-                                e['downloaded'] = True
+                        download(entry['id'])
                         print("Done.")
                     except ConnectionError as cerr:
                         print(cerr)
