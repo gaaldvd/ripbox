@@ -3,6 +3,7 @@
 ## general
 
 - exceptions
+- mark if entry is in queue / downloaded
 
 ## requirements
 

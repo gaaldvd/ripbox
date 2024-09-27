@@ -2,6 +2,7 @@
 
 from urllib.request import urlopen
 from urllib.parse import quote
+from urllib.error import URLError, HTTPError
 from json import loads
 from bs4 import BeautifulSoup
 # from subprocess import run
@@ -20,9 +21,12 @@ class Request:
 
         url = ("https://www.youtube.com/results?search_query="
                + quote(self.query))
-        with urlopen(url) as page:
-            html = page.read().decode('utf-8')
-            soup = BeautifulSoup(html, 'html.parser')
+        try:
+            with urlopen(url) as page:
+                html = page.read().decode('utf-8')
+                soup = BeautifulSoup(html, 'html.parser')
+        except (URLError, HTTPError) as cerr:
+            raise ConnectionError("Connection error!") from cerr
         script_tags = soup.find_all('script')
         json_data = script_tags[23].text[19:-1]
         data = loads(json_data)
@@ -43,7 +47,8 @@ class Request:
                           'title': r['title']['runs'][0]['text'],
                           'length': r['lengthText']['simpleText'],
                           'channel': r['ownerText']['runs'][0]['text'],
-                          'type': "video"}
+                          'type': "video",
+                          'downloaded': False, 'queued': False}
                 if 'publishedTimeText' in r:
                     result['uploaded'] = r['publishedTimeText']['simpleText']
                 else:
@@ -53,10 +58,22 @@ class Request:
                 r = r['radioRenderer']
                 result = {'id': r['playlistId'],
                           'title': r['title']['simpleText'],
-                          'type': "playlist"}
+                          'type': "playlist",
+                          'downloaded': False, 'queued': False}
                 results.append(result)
 
         return results
+
+    def download_entry(self, entry_id):
+        try:
+            pass  # TODO download entry
+            # run(["yt-dlp", "-x", "--audio-format", "flac", entry_id], check=False)
+        except (URLError, HTTPError) as cerr:
+            raise ConnectionError("Connection error!") from cerr
+        else:
+            for r in self.results:
+                if r['id'] == entry_id:
+                    r['downloaded'] = True
 
 
 class Queue:
@@ -74,3 +91,6 @@ class Queue:
         """Remove an entry from the queue."""
 
         self.entries = [e for e in self.entries if e['id'] != entry_id]
+
+    def download(self):
+        pass  # TODO download queue

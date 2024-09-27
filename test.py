@@ -24,6 +24,7 @@ COMMANDS = ("help", "exit", "dq", "lq", "rq", "lr", "ns", "d", "q", "i", "r")
 def list_entries(entries):
     """List query results or queue."""
     for result, n in zip(entries, range(len(entries))):
+        # TODO check if marked as downloaded/in queue
         # rtype = result['type']
         title = result['title']
         length = result['length'] if 'length' in result else None
@@ -44,7 +45,10 @@ def main():
         if not request:
             query = "no woman no cry"
             # query = input(Style.BRIGHT + "\nSearch: " + Style.RESET_ALL)
-            request = Request(query)
+            try:
+                request = Request(query)
+            except ConnectionError as cerr:
+                close(cerr)
             print(Style.BRIGHT + "\nResults:\n" + Style.RESET_ALL)
             list_entries(request.results)
 
@@ -68,7 +72,9 @@ def main():
                 close(Style.BRIGHT + "\nGoodbye!\n" + Style.RESET_ALL)
             elif cmd == "dq":
                 # Download entries in the queue
-                print("\nDownload queue...")  # TODO download queue
+                print("\nDownload queue...")
+                queue.download()
+                print("Done.")
             elif cmd == "lq":
                 # List queue
                 if len(queue.entries) != 0:
@@ -90,14 +96,27 @@ def main():
         elif c in ("q", "d", "i") and n:
             # Add to queue / download / info
             if 1 <= n <= len(request.results):
+                entry = request.results[n - 1]
                 if c == "q":
-                    entry = request.results[n - 1]
                     queue.entries.append(entry)
+                    # Mark as queued in results
+                    for r in request.results:
+                        if r['id'] == entry['id']:
+                            r['queued'] = True
                     print(f"\n{entry['title']} added to queue.")
                 elif c == "d":
-                    print("\nDownload entry...")  # TODO download entry
+                    try:
+                        print(f"\nDownloading {entry['title']}...")
+                        request.download_entry(entry['id'])
+                        # Mark as downloaded in queue
+                        for e in queue.entries:
+                            if e['id'] == entry['id']:
+                                e['downloaded'] = True
+                        print("Done.")
+                    except ConnectionError as cerr:
+                        print(cerr)
+                        continue
                 elif c == "i":
-                    entry = request.results[n - 1]
                     if entry['type'] == "video":
                         print(f"\nTitle:    {entry['title']}\n"
                               f"Length:   {entry['length']}\n"
@@ -125,5 +144,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-# run(["yt-dlp", "-x", "--audio-format", "flac", yt_id], check=False)
