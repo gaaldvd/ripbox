@@ -89,3 +89,13 @@ class RipboxQueue:
         """Remove an entry from the queue."""
 
         self.entries = [e for e in self.entries if e['id'] != entry_id]
+
+    def serve(self):
+        """Serve the queue after removing duplicates."""
+
+        entries, ids = [], []
+        for entry in self.entries:
+            if entry['id'] not in ids:
+                entries.append(entry)
+                ids.append(entry['id'])
+        return entries

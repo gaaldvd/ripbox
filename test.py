@@ -1,7 +1,7 @@
 """Download music from YouTube."""
 
 from sys import exit as close
-from colorama import Style
+from colorama import Style, Back
 from ripbox_common import RipboxRequest, RipboxQueue, download
 
 
@@ -20,12 +20,25 @@ HELP_MSG = (Style.BRIGHT + "Valid commands:\n" + Style.RESET_ALL
 
 COMMANDS = ("help", "exit", "dq", "lq", "rq", "lr", "ns", "d", "q", "i", "r")
 
+downloaded, queued = set(), set()
+
 
 def list_entries(entries):
     """List query results or queue."""
     for result, n in zip(entries, range(len(entries))):
+
         title = result['title']
         length = result['length'] if 'length' in result else None
+
+        if result['id'] in downloaded and result['id'] in queued:
+            print(Back.MAGENTA + " " + Style.RESET_ALL, end=" ")
+        elif result['id'] in downloaded:
+            print(Back.BLUE + " " + Style.RESET_ALL, end=" ")
+        elif result['id'] in queued:
+            print(Back.GREEN + " " + Style.RESET_ALL, end=" ")
+        else:
+            print(" ", end=" ")
+
         print(f"{n + 1:<2}", end="")
         print(f" {title[:95] + '...' if len(title) > 95 else title}  "
               + (f"[{length}]" if length else ""))
@@ -52,6 +65,8 @@ def main():
                 print(Style.BRIGHT + "\nResults:\n" + Style.RESET_ALL)
                 list_entries(request.results)
 
+        print(f"\nQ: {queued}")  # TODO debug
+        print(f"D: {downloaded}")
         # Enter command
         cmd = input("\n> ")
 
@@ -64,52 +79,73 @@ def main():
 
         # Interpret commands
         if cmd in COMMANDS:
+
+            # Show help message
             if cmd == "help":
-                # Show help message
                 print("\n" + HELP_MSG)
+
+            # Close application
             elif cmd == "exit":
-                # Close application
                 close(Style.BRIGHT + "\nGoodbye!\n" + Style.RESET_ALL)
+
+            # Download entries in the queue
             elif cmd == "dq":
-                # Download entries in the queue
                 print("\nDownload queue...")
-                for entry in queue.entries:
+                # TODO add progress bar
+                for entry in queue.serve():
                     print(f"Downloading {entry['title']}...")
                     download(entry['id'])
+                    downloaded.add(entry['id'])
+                    queue.remove_entry(entry['id'])
+                    queued.remove(entry['id'])
                 print("Done.")
+
+            # List queue
             elif cmd == "lq":
-                # List queue
                 if len(queue.entries) != 0:
                     print(Style.BRIGHT + "\nQueue:\n" + Style.RESET_ALL)
-                    list_entries(queue.entries)
+                    list_entries(queue.serve())
                 else:
                     print("\nQueue empty!")
+
+            # Remove queue
             elif cmd == "rq":
-                # Remove queue
                 queue.remove()
+                queued.clear()
                 print("\nQueue removed.")
+
+            # List results
             elif cmd == "lr":
-                # List results
                 print(Style.BRIGHT + "\nResults:\n" + Style.RESET_ALL)
                 list_entries(request.results)
+
+            # New search query
             elif cmd == "ns":
-                # New search query
                 request = None
+
+        # Add to queue / download / info
         elif c in ("q", "d", "i") and n:
-            # Add to queue / download / info
             if 1 <= n <= len(request.results):
                 entry = request.results[n - 1]
+
+                # Add to queue
                 if c == "q":
                     queue.entries.append(entry)
+                    queued.add(entry['id'])
                     print(f"\n{entry['title']} added to queue.")
+
+                # Download entry
                 elif c == "d":
                     try:
                         print(f"\nDownloading {entry['title']}...")
                         download(entry['id'])
+                        downloaded.add(entry['id'])
                         print("Done.")
                     except ConnectionError as cerr:
                         print(cerr)
                         continue
+
+                # Entry info
                 elif c == "i":
                     if entry['type'] == "video":
                         print(f"\nTitle:    {entry['title']}\n"
@@ -122,15 +158,18 @@ def main():
             else:
                 print(Style.BRIGHT + f"\nInvalid entry: {n}" + Style.RESET_ALL
                       + f"  Choose from 1-{len(request.results)}!")
+
+        # Remove from queue
         elif c == "r" and n:
-            # Remove from queue
             if 1 <= n <= len(queue.entries):
                 entry = queue.entries[n - 1]
                 queue.remove_entry(entry['id'])
+                queued.remove(entry['id'])
                 print(f"\n{entry['title']} removed from queue.")
             else:
                 print(Style.BRIGHT + f"\nInvalid entry: {n}" + Style.RESET_ALL
                       + f"  Choose from 1-{len(queue.entries)}!")
+
         else:
             print(Style.BRIGHT + "\nUnknown command! " + Style.RESET_ALL
                   + HELP_MSG)
