@@ -5,15 +5,16 @@ from urllib.parse import quote
 from urllib.error import URLError, HTTPError
 from json import loads
 from bs4 import BeautifulSoup
-# from subprocess import run
+from subprocess import run, CalledProcessError
 
 
 def download(entry_id):
     """Download an entry from query results or queue."""
     try:
-        pass  # TODO download entry
-        # run(["yt-dlp", "-x", "--audio-format", "flac", entry_id], check=False)
-    except (URLError, HTTPError) as cerr:
+        with open('session.log', 'a', encoding='utf-8') as log:
+            run(["yt-dlp", "-x", "--audio-format", "flac", entry_id],
+                check=True, stdout=log)
+    except (URLError, HTTPError, CalledProcessError) as cerr:
         raise ConnectionError("Connection error!") from cerr
 
 

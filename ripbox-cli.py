@@ -2,11 +2,12 @@
 
 from sys import exit as close
 from colorama import Style, Back
+from progress.bar import Bar
 from ripbox_common import RipboxRequest, RipboxQueue, download
 
 
 HELP_MSG = (Style.BRIGHT + "Valid commands:\n" + Style.RESET_ALL
-            + "  q<n>: add n. entry to queue\n"
+            + "\n  q<n>: add n. entry to queue\n"
             "  r<n>: remove n. entry from queue\n"
             "  d<n>: download n. entry\n"
             "  i<n>: entry info\n"
@@ -31,11 +32,18 @@ def list_entries(entries):
         length = result['length'] if 'length' in result else None
 
         if result['id'] in downloaded and result['id'] in queued:
-            print(Back.MAGENTA + " " + Style.RESET_ALL, end=" ")
+            print(Back.MAGENTA + " " + Style.RESET_ALL, end="")
         elif result['id'] in downloaded:
-            print(Back.BLUE + " " + Style.RESET_ALL, end=" ")
+            print(Back.BLUE + " " + Style.RESET_ALL, end="")
         elif result['id'] in queued:
-            print(Back.GREEN + " " + Style.RESET_ALL, end=" ")
+            print(Back.GREEN + " " + Style.RESET_ALL, end="")
+        else:
+            print(" ", end="")
+
+        if result['type'] == "video":
+            print(Back.YELLOW + " " + Style.RESET_ALL, end=" ")
+        elif result['type'] == "playlist":
+            print(Back.CYAN + " " + Style.RESET_ALL, end=" ")
         else:
             print(" ", end=" ")
 
@@ -48,8 +56,10 @@ def main():
     """CLI application for Ripbox."""
     request = None
     queue = RipboxQueue()
+    open('session.log', 'w').close()
 
-    print(Style.BRIGHT + "\nWelcome to Ripbox!" + Style.RESET_ALL)
+    print(Style.BRIGHT + "\nWelcome to Ripbox!\n" + Style.RESET_ALL
+          + "\nType 'help' for available commands!")
 
     while True:
 
@@ -65,8 +75,6 @@ def main():
                 print(Style.BRIGHT + "\nResults:\n" + Style.RESET_ALL)
                 list_entries(request.results)
 
-        print(f"\nQ: {queued}")  # TODO debug
-        print(f"D: {downloaded}")
         # Enter command
         cmd = input("\n> ")
 
@@ -90,15 +98,26 @@ def main():
 
             # Download entries in the queue
             elif cmd == "dq":
-                print("\nDownload queue...")
-                # TODO add progress bar
-                for entry in queue.serve():
-                    print(f"Downloading {entry['title']}...")
-                    download(entry['id'])
-                    downloaded.add(entry['id'])
-                    queue.remove_entry(entry['id'])
-                    queued.remove(entry['id'])
-                print("Done.")
+                print("\nDownloading queue...\n")
+                with Bar("  Progress:",
+                         max=len(queue.serve())) as bar:
+                    for entry in queue.serve():
+                        if entry['id'] not in downloaded:
+                            try:
+                                download(entry['id'])
+                                downloaded.add(entry['id'])
+                            except ConnectionError:
+                                continue
+                            else:
+                                queue.remove_entry(entry['id'])
+                                queued.remove(entry['id'])
+                                bar.next()
+                        else:
+                            queue.remove_entry(entry['id'])
+                            queued.remove(entry['id'])
+                            bar.next()
+                            continue
+                print(Style.BRIGHT + "\nDone." + Style.RESET_ALL)
 
             # List queue
             elif cmd == "lq":
@@ -130,20 +149,26 @@ def main():
 
                 # Add to queue
                 if c == "q":
-                    queue.entries.append(entry)
-                    queued.add(entry['id'])
-                    print(f"\n{entry['title']} added to queue.")
+                    if entry['id'] not in queued:
+                        queue.entries.append(entry)
+                        queued.add(entry['id'])
+                        print(f"\n{entry['title']} added to queue.")
+                    else:
+                        print("\nAlready in queue!")
 
                 # Download entry
                 elif c == "d":
-                    try:
-                        print(f"\nDownloading {entry['title']}...")
-                        download(entry['id'])
-                        downloaded.add(entry['id'])
-                        print("Done.")
-                    except ConnectionError as cerr:
-                        print(cerr)
-                        continue
+                    if entry['id'] not in downloaded:
+                        try:
+                            print(f"\nDownloading {entry['title']}...")
+                            download(entry['id'])
+                            downloaded.add(entry['id'])
+                            print("Done.")
+                        except ConnectionError as cerr:
+                            print(cerr)
+                            continue
+                    else:
+                        print("\nAlready downloaded!")
 
                 # Entry info
                 elif c == "i":
