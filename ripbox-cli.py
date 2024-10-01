@@ -25,7 +25,7 @@ downloaded, queued = set(), set()
 
 
 def list_entries(entries):
-    """List query results or queue."""
+    """List query results or the queue."""
     for result, n in zip(entries, range(len(entries))):
 
         title = result['title']
@@ -129,7 +129,7 @@ def main():
 
             # Remove queue
             elif cmd == "rq":
-                queue.remove()
+                queue.clear()
                 queued.clear()
                 print("\nQueue removed.")
 

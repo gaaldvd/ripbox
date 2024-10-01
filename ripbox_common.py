@@ -9,7 +9,19 @@ from subprocess import run, CalledProcessError
 
 
 def download(entry_id):
-    """Download an entry from query results or queue."""
+    """Download an entry from the query results or the queue.
+
+    Parameters
+    ----------
+    entry_id : str
+        The 'id' value of the entry.
+
+    Raises
+    ------
+    ConnectionError
+        If there's a problem with the connection or subprocess.run()
+        returns a value other than 0.
+    """
     try:
         with open('session.log', 'a', encoding='utf-8') as log:
             run(["yt-dlp", "-x", "--audio-format", "flac", entry_id],
@@ -19,15 +31,42 @@ def download(entry_id):
 
 
 class RipboxRequest:
-    """Manages search requests and downloads."""
+    """Manages search requests and results.
+    Usage: request = RipboxRequest(query)
+
+    Attributes
+    ----------
+    query : str
+        The search query provided by the user.
+    results : list
+        Contains the search results in a list of dictionaries.
+    """
 
     def __init__(self, query):
+        """
+        Parameters
+        ----------
+        query : str
+            The search query provided by the user.
+        """
         self.query = query
         self.raw_results = self.get_results()
         self.results = self.create_list()
 
     def get_results(self):
-        """Fetch results from YouTube."""
+        """Fetch results from YouTube.
+        Scrapes the search results page, extracts results in JSON format
+        and returns them as a raw list of dictionaries.
+
+        Raises
+        ------
+        ConnectionError
+            If there is a connection error while scraping the site.
+        Returns
+        -------
+        results : list
+            The raw list of results as a list of dictionaries.
+        """
 
         url = ("https://www.youtube.com/results?search_query="
                + quote(self.query))
@@ -47,7 +86,13 @@ class RipboxRequest:
         return results
 
     def create_list(self):
-        """Create a list of dictionaries from the raw results."""
+        """Create a list of standardized dictionaries from the raw results.
+
+        Returns
+        -------
+        results : list
+            The list of results as a list of standardized dictionaries.
+        """
 
         results = []
         for r in self.raw_results:
@@ -76,23 +121,52 @@ class RipboxRequest:
 
 
 class RipboxQueue:
-    """Manages a download queue."""
+    """Manages a download queue.
+    Usage: queue = RipboxQueue()
+
+    Attributes
+    ----------
+    entries : list
+        Queue entries as a list of standardized dictionaries.
+
+    Methods
+    -------
+    clear
+        Clears the queue.
+    remove_entry(entry_id)
+        Removes an entry from the queue.
+    serve
+        Serves the queue after removing duplicates.
+    """
 
     def __init__(self):
         self.entries = []
 
-    def remove(self):
-        """Remove active queue."""
+    def clear(self):
+        """Clear active queue."""
 
         self.entries = []
 
     def remove_entry(self, entry_id):
-        """Remove an entry from the queue."""
+        """Remove an entry from the queue.
+
+        Parameters
+        ----------
+        entry_id : str
+            The 'id' value of the entry.
+        """
 
         self.entries = [e for e in self.entries if e['id'] != entry_id]
 
     def serve(self):
-        """Serve the queue after removing duplicates."""
+        """Serve the queue after removing duplicates.
+        Use this method for listing or downloading queue entries.
+
+        Returns
+        -------
+        entries : list
+            The list of results as a list of standardized dictionaries.
+        """
 
         entries, ids = [], []
         for entry in self.entries:
