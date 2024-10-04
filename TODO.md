@@ -3,6 +3,7 @@
 ## general
 
 - docstrings, readme
+- install/start script
 
 ## requirements
 
