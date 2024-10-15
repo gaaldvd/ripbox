@@ -1,11 +1,27 @@
-"""Download music from YouTube."""
+"""Ripbox shared library.
+
+This module contains the classes and functions used by the Ripbox
+applications (both CLI and GUI).
+
+Functions:
+
+    download(entry_id)
+        Download an entry from the query results or the queue.
+
+Classes:
+
+    RipboxRequest
+        Manages search requests and results.
+    RipboxQueue
+        Manages a download queue.
+"""
 
 from urllib.request import urlopen
 from urllib.parse import quote
 from urllib.error import URLError, HTTPError
 from json import loads
-from bs4 import BeautifulSoup
 from subprocess import run, CalledProcessError
+from bs4 import BeautifulSoup
 
 
 def download(entry_id):
