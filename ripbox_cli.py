@@ -1,4 +1,13 @@
-"""Download music from YouTube."""
+"""Ripbox CLI application.
+
+The script uses the shared library ripbox_common and yt-dlp to download
+music from YT.
+
+Use the ripbox.sh starting script with the -c option or run this script
+directly with Python to begin using the application.
+
+Enter the 'help' command for further information on usage.
+"""
 
 from sys import exit as close
 from colorama import Style, Back
