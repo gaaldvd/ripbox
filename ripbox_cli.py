@@ -75,8 +75,7 @@ def main():
         # Enter search query
         if not request:
             try:
-                query = "no woman no cry"
-                # query = input(Style.BRIGHT + "\nSearch: " + Style.RESET_ALL)
+                query = input(Style.BRIGHT + "\nSearch: " + Style.RESET_ALL)
                 request = RipboxRequest(query)
             except ConnectionError as cerr:
                 close(cerr)
