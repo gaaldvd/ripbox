@@ -14,6 +14,5 @@ while getopts "cg" flag; do
   esac
 done
 
-echo "> Setting up application..."
-echo "  Mode: $mode"
+clear
 pipenv run python ripbox_$mode.py

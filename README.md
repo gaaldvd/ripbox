@@ -26,10 +26,32 @@ The following packages have to be installed from the package manager:
 
 Start the application from the ripbox directory:
 
-CLI version: `./start -c`
-GUI version (not yet implemented): `./start -g`
+- CLI version: `./start -c`
+- GUI version (not yet implemented): `./start -g`
+
+Files are downloaded into the /download directory and a log about the last session can be found in the `session.log` file.
 
 ### CLI
+
+After starting the application, the user is prompted for a search query.
+
+The results appear in a list (only the first ~20 appear, but most of the time the relevant result can be found in these).
+
+There are a few options now (`<n>` is always the number of the entry):
+
+- download an entry: `d<n>`
+- add entry to queue: `q<n>`
+- information about the entry: `i<n>`
+
+A new search can be initiated with the `ns` command. Use the `lq` command to list the queue and `lr` to list the results again. The queue can be downloaded with the `dq` command or removed  with `rq`. `r<n>` removes an entry from the queue.
+
+Color markings:
+
+- blue: downloaded
+- green: in queue
+- magenta: downloaded and in queue
+
+The `help` command prints the list of commands available and the `exit` command closes the application.
 
 ### GUI
 

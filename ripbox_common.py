@@ -40,7 +40,7 @@ def download(entry_id):
     """
     try:
         with open('session.log', 'a', encoding='utf-8') as log:
-            run(["yt-dlp", "-x", "--audio-format", "flac", entry_id],
+            run(["yt-dlp", "-x", "--audio-format", "flac", "-P", "download" entry_id],
                 check=True, stdout=log)
     except (URLError, HTTPError, CalledProcessError) as cerr:
         raise ConnectionError("Connection error!") from cerr
