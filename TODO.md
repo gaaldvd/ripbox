@@ -1,5 +1,3 @@
 # ripbox TODO
 
-## general
-
-- readme
+It's empty, for now.
